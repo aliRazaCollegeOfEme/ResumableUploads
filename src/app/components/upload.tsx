@@ -114,7 +114,7 @@ export default function UploadArea(props: any) {
             companionUrl: 'https://companion.uppy.io/',
         };
 
-        new Uppy({
+        return new Uppy({
             autoProceed: false,
             debug: true,
             restrictions: {
