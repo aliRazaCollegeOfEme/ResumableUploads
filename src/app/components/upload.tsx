@@ -103,9 +103,9 @@ console.log('-------UploadArea: Outside component---------');
 export default function UploadArea(props: any) {
     console.log('-------UploadArea: Inside component---------');
     
-    // useEffect(() => {
-        // return () => uppy.close();
-    // }, []);
+    useEffect(() => {
+        return () => uppy.close({ reason: 'unmount' })
+    }, []);
 
     return (
         <Fragment>
