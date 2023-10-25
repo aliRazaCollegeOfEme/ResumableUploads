@@ -20,30 +20,43 @@ import '@uppy/dashboard/dist/style.min.css';
 const token  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYzNTkwYmUzN2YzZWVlZmZlOTQxZWNlZCIsInR5cGUiOiJDbGllbnQiLCJzY29wZSI6W10sImlhdCI6MTY5ODAwMDU1MSwiZXhwIjoxNjk4MDExMzUxfQ.pqKQJk000JOfd8DvsOTnTGRkLW54h28hsZzf10Y9xyc'
 // let uploadUUID = uuid();
 
-// const uppy = new Uppy({
-//     autoProceed: false,
-//     debug: true,
-//     restrictions: {
-//         minNumberOfFiles: 1,
-//         allowedFileTypes: ['video/*', 'image/*'],
-//     },
-//     meta: { title: 'title', name: 'name', cameraModel: '642687c0cfc1a73848a58f68', otherCameraModel: '' },
-//     id: 'uppyAerial',
-//     allowMultipleUploads: false,
-//     allowMultipleUploadBatches: false
-// });
+const xhrOptions: XHRUploadOptions = {
+    endpoint: `${process.env.NEXT_PUBLIC_BASE_URL}/dataTokens/upload`,
+    bundle: true,
+    fieldName: 'files',
+    formData: true,
+    id: 'XHRUpload',
+    method: 'POST',
+    headers: {
+        authorization: `Bearer ${token}`,
+    },
+};
+
+const driveOpts: GoogleDriveOptions = {
+    companionUrl: 'https://companion.uppy.io/',
+};
+const dropboxOpts: DropboxOptions = {
+    companionUrl: 'https://companion.uppy.io/',
+};
+
+const uppy = new Uppy({
+    autoProceed: false,
+    debug: true,
+    restrictions: {
+        minNumberOfFiles: 1,
+        allowedFileTypes: ['video/*', 'image/*'],
+    },
+    meta: { title: 'title', name: 'name', cameraModel: '642687c0cfc1a73848a58f68', otherCameraModel: '' },
+    id: 'uppyAerial',
+    allowMultipleUploads: false,
+    allowMultipleUploadBatches: false
+})
+.use(XHRUpload, xhrOptions)
+.use(Compressor)
+.use(GoogleDrive, driveOpts)
+.use(Dropbox, dropboxOpts);
 
 // uppy.use(Webcam);
-// uppy.use(Compressor);
-// const driveOpts: GoogleDriveOptions = {
-//   companionUrl: 'https://companion.uppy.io/',
-// };
-// uppy.use(GoogleDrive, driveOpts);
-
-// const dropboxOpts: DropboxOptions = {
-//     companionUrl: 'https://companion.uppy.io/',
-// };
-// uppy.use(Dropbox, dropboxOpts);
 // uppy.use(RemoteSources, {
 //     companionUrl: 'https://companion.uppy.io/',
 //     // sources: ['GoogleDrive'],
@@ -58,81 +71,39 @@ const token  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYzNTkwYmUzN2YzZWV
 //     // allowedMetaFields: ['bucketName', 'objectName', 'contentType', 'cacheControl'],
 // });
 
-const attachUppyEvents = (uppy: any) => {
-    uppy.on('file-added', (file: any) => {
-        console.log('-----file added-------');
-        console.log({ file });
-        file.meta = {
-            ...file.meta,
-            bucketName: 'navigate-dev',
-            objectName: `${file.name}`,
-            contentType: file.type,
-        }
-    });
-    uppy.on('upload', (data: { id: number, fileIDs: Array<object> }) => {
-        // data object consists of `id` with upload ID and `fileIDs` array
-        // with file IDs in current upload
-        // data: { id, fileIDs }
-        console.log(`Starting upload ${data.id} for files ${data.fileIDs}`);
-    });
-    
-    uppy.on('complete', (res: any) => {
-        console.log('----------upload complete---------', { res });
-        for (let succ = 0; succ < res.successful.length; succ++) {
-            console.log(res.successful[succ].uploadURL);
-        }
-        // uploadUUID = uuid();
-    });
-    
-    uppy.on('upload-error', (file: any, error: Error) => console.log(error));
-    uppy.on('error', (err: Error) => console.log(err));
-    uppy.on('progress', (progress: number) => console.log({ progress }));
-    // todo: handle more events
-}
+uppy.on('file-added', (file: any) => {
+    console.log('-----file added-------');
+    console.log({ file });
+    file.meta = {
+        ...file.meta,
+        bucketName: 'navigate-dev',
+        objectName: `${file.name}`,
+        contentType: file.type,
+    }
+});
+uppy.on('upload', (data) => {
+    // data object consists of `id` with upload ID and `fileIDs` array
+    // with file IDs in current upload
+    // data: { id, fileIDs }
+    console.log(`Starting upload ${data.id} for files ${data.fileIDs}`);
+});
+
+uppy.on('complete', (res: any) => {
+    console.log('----------upload complete---------', { res });
+    for (let succ = 0; succ < res.successful.length; succ++) {
+        console.log(res.successful[succ].uploadURL);
+    }
+    // uploadUUID = uuid();
+});
+
+uppy.on('upload-error', (file: any, error: Error) => console.log(error));
+uppy.on('error', (err: Error) => console.log(err));
+uppy.on('progress', (progress: number) => console.log({ progress }));
+// todo: handle more events
 
 console.log('-------UploadArea: Outside component---------');
 export default function UploadArea(props: any) {
     console.log('-------UploadArea: Inside component---------');
-    const uppy = useMemo(() => {
-        console.log('---use memo---');
-        const xhrOptions: XHRUploadOptions = {
-            endpoint: `${process.env.NEXT_PUBLIC_BASE_URL}/dataTokens/upload`,
-            bundle: true,
-            fieldName: 'files',
-            formData: true,
-            id: 'XHRUpload',
-            method: 'POST',
-            headers: {
-              authorization: `Bearer ${token}`,
-            },
-        };
-
-        const driveOpts: GoogleDriveOptions = {
-            companionUrl: 'https://companion.uppy.io/',
-        };
-        const dropboxOpts: DropboxOptions = {
-            companionUrl: 'https://companion.uppy.io/',
-        };
-
-        return new Uppy({
-            autoProceed: false,
-            debug: true,
-            restrictions: {
-                minNumberOfFiles: 1,
-                allowedFileTypes: ['video/*', 'image/*'],
-            },
-            meta: { title: 'title', name: 'name', cameraModel: '642687c0cfc1a73848a58f68', otherCameraModel: '' },
-            id: 'uppyAerial',
-            allowMultipleUploads: false,
-            allowMultipleUploadBatches: false
-        })
-        .use(XHRUpload, xhrOptions)
-        .use(Compressor)
-        .use(GoogleDrive, driveOpts)
-        .use(Dropbox, dropboxOpts);
-    }, []);
-
-    attachUppyEvents(uppy);
     
     useEffect(() => {
         // return () => {
