@@ -9,7 +9,7 @@ import { Dashboard } from '@uppy/react';
 import Compressor from '@uppy/compressor';
 import GoogleDrive, { GoogleDriveOptions } from '@uppy/google-drive';
 import Dropbox, { DropboxOptions } from '@uppy/dropbox';
-import { Fragment, useEffect, useMemo } from 'react';
+import { Fragment, useEffect } from 'react';
 // import { v4 as uuid } from 'uuid';
 
 import '@uppy/core/dist/style.min.css';
@@ -20,6 +20,18 @@ import '@uppy/dashboard/dist/style.min.css';
 const token  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYzNTkwYmUzN2YzZWVlZmZlOTQxZWNlZCIsInR5cGUiOiJDbGllbnQiLCJzY29wZSI6W10sImlhdCI6MTY5ODAwMDU1MSwiZXhwIjoxNjk4MDExMzUxfQ.pqKQJk000JOfd8DvsOTnTGRkLW54h28hsZzf10Y9xyc'
 // let uploadUUID = uuid();
 
+const uppy = new Uppy({
+    autoProceed: false,
+    debug: true,
+    restrictions: {
+        minNumberOfFiles: 1,
+        allowedFileTypes: ['video/*', 'image/*'],
+    },
+    meta: { title: 'title', name: 'name', cameraModel: '642687c0cfc1a73848a58f68', otherCameraModel: '' },
+    id: 'uppyAerial',
+    // allowMultipleUploads: false,
+    allowMultipleUploadBatches: false,
+});
 const xhrOptions: XHRUploadOptions = {
     endpoint: `${process.env.NEXT_PUBLIC_BASE_URL}/dataTokens/upload`,
     bundle: true,
@@ -31,30 +43,16 @@ const xhrOptions: XHRUploadOptions = {
         authorization: `Bearer ${token}`,
     },
 };
-
+uppy.use(XHRUpload, xhrOptions);
+uppy.use(Compressor);
 const driveOpts: GoogleDriveOptions = {
     companionUrl: 'https://companion.uppy.io/',
 };
+uppy.use(GoogleDrive, driveOpts)
 const dropboxOpts: DropboxOptions = {
     companionUrl: 'https://companion.uppy.io/',
 };
-
-const uppy = new Uppy({
-    autoProceed: false,
-    debug: true,
-    restrictions: {
-        minNumberOfFiles: 1,
-        allowedFileTypes: ['video/*', 'image/*'],
-    },
-    meta: { title: 'title', name: 'name', cameraModel: '642687c0cfc1a73848a58f68', otherCameraModel: '' },
-    id: 'uppyAerial',
-    allowMultipleUploads: false,
-    allowMultipleUploadBatches: false
-})
-.use(XHRUpload, xhrOptions)
-.use(Compressor)
-.use(GoogleDrive, driveOpts)
-.use(Dropbox, dropboxOpts);
+uppy.use(Dropbox, dropboxOpts);
 
 // uppy.use(Webcam);
 // uppy.use(RemoteSources, {
@@ -105,18 +103,15 @@ console.log('-------UploadArea: Outside component---------');
 export default function UploadArea(props: any) {
     console.log('-------UploadArea: Inside component---------');
     
-    useEffect(() => {
-        // return () => {
-        //     if (uppy) uppy.close();
-        //     else console.log('---uppy is not defined---');
-        // }
-    }, []);
+    // useEffect(() => {
+        // return () => uppy.close();
+    // }, []);
 
     return (
         <Fragment>
             <Dashboard
                 uppy={uppy}
-                plugins={['DragDrop', 'XHRUpload','GoogleDrive', 'Dropbox']}
+                plugins={['DragDrop', 'GoogleDrive', 'Dropbox']}
                 showProgressDetails={true}
                 suppressHydrationWarning={true}
                 doneButtonHandler={() => {

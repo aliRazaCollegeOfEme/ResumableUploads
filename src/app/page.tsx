@@ -5,11 +5,13 @@ import UploadArea from '@/app/components/upload'
 export default function Home() {
   return (
     <main className={styles.center}>
-      <div className={styles.description}>
-        Resumable uploads demo
-      </div>
+      <header className={styles.description}>
+        <p>
+          Resumable uploads demo
+        </p>
+      </header>
 
-      <div className={styles.center} id='dashboard'>
+      <div className={styles.center}>
         <UploadArea />
       </div>
     </main>
